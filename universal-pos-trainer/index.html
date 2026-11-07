@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"/>
+<title>iPad POS Training Simulator</title>
+<style>
+:root{
+  --bg:#eef2f5; --panel:#fff; --line:#d8dee6; --text:#1e2936; --muted:#6b7785;
+  --air:#16a6b6; --air2:#0d8d9b; --danger:#d9534f; --ok:#168a5b; --nav:#263746;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:#cfd6dc;color:var(--text)}
+button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#app{max-width:1366px;min-height:100vh;margin:auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:58px;background:var(--nav);color:white;display:flex;align-items:center;padding:0 18px;gap:16px}
+.brand{font-weight:700;letter-spacing:.03em}.brand small{opacity:.7;font-weight:500;margin-left:8px}
+.topbar .spacer{flex:1}.clock{font-variant-numeric:tabular-nums}
+.layout{flex:1;display:grid;grid-template-columns:180px 1fr;min-height:0}
+.sidebar{background:#304657;padding:10px 0;color:#dce6ed}
+.navbtn{width:100%;border:0;background:transparent;color:inherit;padding:16px 14px;text-align:left;cursor:pointer}
+.navbtn.active,.navbtn:hover{background:#203746;color:white}
+.main{min-width:0;overflow:auto;padding:14px}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 2px #0001}
+.order-grid{display:grid;grid-template-columns:minmax(500px,1.4fr) minmax(360px,.8fr);gap:14px}
+.product-panel{padding:14px}.category-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:white;border-radius:6px;padding:9px 14px}
+.tab.active{background:#e7f7f9;border-color:#8fd7de;color:#087d89}
+.products{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.product{min-height:96px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:10px;text-align:left;display:flex;flex-direction:column;justify-content:space-between}
+.product:active{transform:scale(.985)}
+.product .price{font-weight:700;font-size:18px}
+.order-panel{display:flex;flex-direction:column;min-height:650px}
+.order-head{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.order-list{flex:1;overflow:auto;padding:0 14px}
+.order-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:13px 0;border-bottom:1px solid #edf0f3}
+.qtyline{display:flex;align-items:center;gap:8px;margin-top:7px}
+.qtyline button{width:34px;height:34px;border:1px solid var(--line);background:white;border-radius:5px}
+.row-actions{display:flex;gap:5px;justify-content:flex-end}
+.linkbtn{border:0;background:transparent;color:#087d89;padding:4px}
+.summary{border-top:1px solid var(--line);padding:14px;background:#fafbfc}
+.sumrow{display:flex;justify-content:space-between;margin:5px 0}.total{font-size:25px;font-weight:800}
+.primary{width:100%;border:0;background:var(--air);color:#fff;padding:15px;border-radius:6px;font-weight:700;font-size:17px}
+.primary:hover{background:var(--air2)}.primary:disabled{background:#b8c2ca}
+.secondary{border:1px solid var(--line);background:#fff;padding:11px 14px;border-radius:6px}
+.danger{color:var(--danger)}
+.pay-wrap{display:grid;grid-template-columns:1fr 430px;gap:14px}
+.pay-summary,.pay-panel{padding:18px}
+.pay-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
+.paymethod{border:2px solid var(--line);background:white;border-radius:7px;padding:16px;text-align:left}
+.paymethod.active{border-color:var(--air);background:#effbfc}
+.amountbox{background:#f4f7f9;border:1px solid var(--line);border-radius:7px;padding:13px;margin:10px 0}
+.amountbox input{width:100%;font-size:30px;text-align:right;padding:10px;border:1px solid #b9c4cc;border-radius:6px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keypad button{height:58px;border:1px solid var(--line);background:white;border-radius:6px;font-size:22px}
+.quickcash{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}
+.quickcash button{padding:10px;border:1px solid var(--line);background:white;border-radius:5px}
+.complete{text-align:center;padding:45px 20px}.check{font-size:66px;color:var(--ok)}
+.receipt{max-width:350px;margin:18px auto;background:white;border:1px dashed #888;padding:18px;font-family:monospace;text-align:left}
+.history{padding:14px}.history table{width:100%;border-collapse:collapse}.history th,.history td{padding:11px;border-bottom:1px solid var(--line);text-align:left}
+.training{display:grid;grid-template-columns:1fr 360px;gap:14px}
+.mission,.score{padding:16px}.mission-title{font-size:22px;font-weight:800}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f7f9;color:#087d89;font-size:12px}
+.feedback{margin-top:12px;padding:12px;border-radius:6px;background:#f4f7f9}.feedback.ok{background:#e9f8f1;color:#0c6c46}.feedback.ng{background:#fff0ef;color:#a43f3a}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal.show{display:flex}.modalbox{width:min(520px,100%);background:white;border-radius:10px;padding:18px}
+.discount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.discount-grid button{padding:14px;border:1px solid var(--line);background:white;border-radius:6px}
+.toast{position:fixed;right:18px;bottom:18px;background:#1f2d38;color:white;padding:12px 16px;border-radius:6px;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1}
+.small{font-size:12px;color:var(--muted)}
+@media(max-width:900px){
+ .layout{grid-template-columns:1fr}.sidebar{display:none}.order-grid,.pay-wrap,.training{grid-template-columns:1fr}
+ .products{grid-template-columns:repeat(2,1fr)}.main{padding:8px}.order-panel{min-height:520px}
+}
+
+.ops-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:14px}
+.ops-card{padding:16px}
+.cash-count{display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center;margin:6px 0}
+.cash-count input{padding:9px;border:1px solid var(--line);border-radius:5px;text-align:right;font-size:16px}
+.notice{padding:11px;border-left:4px solid #e0a300;background:#fff9e8;margin:10px 0}
+.scenario-card{border:1px solid var(--line);border-radius:7px;padding:14px;background:#fff}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#edf2f6;font-size:12px}
+.scanbox{display:flex;gap:8px;margin:10px 0}.scanbox input{flex:1;padding:12px;border:1px solid var(--line);border-radius:6px;font-size:17px}
+.split-list{display:grid;gap:7px}.split-row{display:flex;justify-content:space-between;align-items:center;padding:9px;border:1px solid var(--line);border-radius:6px}
+@media(max-width:900px){.ops-grid{grid-template-columns:1fr}}
+
+.game-grid{display:grid;grid-template-columns:minmax(0,1.3fr) 360px;gap:14px}
+.game-card{padding:16px}.customer{display:flex;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:8px;background:#fafcfd}
+.avatar{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:#e7edf2;font-size:34px}
+.request{font-size:18px;font-weight:700;margin-top:6px}.progressbar{height:12px;border-radius:999px;background:#e5eaee;overflow:hidden}
+.progressbar>div{height:100%;background:var(--air);width:0}.metric{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.metric strong{display:block;font-size:24px}.logbox{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff;padding:10px}
+.logrow{padding:7px 0;border-bottom:1px solid #edf0f3;font-size:13px}.grade{font-size:54px;font-weight:900;text-align:center}
+.action-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+@media(max-width:900px){.game-grid{grid-template-columns:1fr}}
+
+.queue-grid{display:grid;grid-template-columns:minmax(0,1.3fr) 380px;gap:14px}
+.queue-card{padding:16px}.queue-list{display:grid;gap:8px;margin-top:10px}
+.queue-item{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fff;display:flex;justify-content:space-between;gap:10px}
+.timer{font-size:42px;font-weight:900;font-variant-numeric:tabular-nums}
+.timer.warn{color:#b3423d}.coin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.coin-grid button{padding:12px;border:1px solid var(--line);background:#fff;border-radius:6px}
+.option-row{display:flex;gap:8px;flex-wrap:wrap}.option-row button.active{background:#e7f7f9;border-color:#8fd7de;color:#087d89}
+.receipt-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.taxbox{padding:10px;border:1px solid var(--line);border-radius:6px;background:#fafcfd}
+@media(max-width:900px){.queue-grid{grid-template-columns:1fr}}
+
+.audit-grid{display:grid;grid-template-columns:minmax(0,1.2fr) 380px;gap:14px}
+.audit-card{padding:16px}
+.issue{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fff;margin:7px 0}
+.issue.ok{border-color:#aadac6;background:#eef9f4}
+.issue.ng{border-color:#efb0ab;background:#fff2f1}
+.mini-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini-kpi>div{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fff;text-align:center}
+.mini-kpi strong{display:block;font-size:22px}
+.confirmbar{display:flex;gap:8px;align-items:center;padding:10px;background:#f7fafb;border-top:1px solid var(--line)}
+.confirmbar label{font-size:13px;color:var(--muted)}
+.airlike-title{font-size:20px;font-weight:800}
+@media(max-width:900px){.audit-grid{grid-template-columns:1fr}}
+
+.realistic-grid{display:grid;grid-template-columns:minmax(0,1.25fr) 390px;gap:14px}
+.realistic-card{padding:16px}
+.step-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.step-chip{padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px}
+.step-chip.active{background:#e7f7f9;border-color:#8fd7de;color:#087d89;font-weight:700}
+.rulebox{padding:12px;border:1px solid #efcf88;background:#fff9e8;border-radius:7px;margin:10px 0}
+.segment{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.segment button{flex:1;border:0;border-right:1px solid var(--line);background:#fff;padding:10px}
+.segment button:last-child{border-right:0}.segment button.active{background:#e7f7f9;color:#087d89;font-weight:700}
+@media(max-width:900px){.realistic-grid{grid-template-columns:1fr}}
+
+.ipad-shell{border-radius:14px}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8fafb;border-bottom:1px solid var(--line)}
+.toolbar .title{font-weight:800;font-size:18px}.toolbar .grow{flex:1}.toolbar button{min-height:40px}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(110%);width:min(760px,100%);background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 30px #0003;z-index:30;transition:.2s;padding:18px}
+.sheet.show{transform:translateX(-50%) translateY(0)}
+.sheet-backdrop{position:fixed;inset:0;background:#0007;display:none;z-index:29}.sheet-backdrop.show{display:block}
+.dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.payment-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.pay-total-big{font-size:38px;font-weight:900}
+.touch-target{min-height:48px}.tx-detail{display:grid;gap:8px;margin-top:12px}.tx-detail .row{display:flex;justify-content:space-between;border-bottom:1px solid #edf0f3;padding:8px 0}
+@media(max-width:900px){.topbar{height:52px}.product{min-height:86px}.order-panel{min-height:480px}}
+
+.pos-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pos-switch button{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:6px}.pos-switch button.active{background:#e7f7f9;border-color:#8fd7de;color:#087d89;font-weight:700}
+.skill-row{display:grid;grid-template-columns:120px 1fr 52px;gap:8px;align-items:center;margin:8px 0}.skillbar{height:10px;background:#e5eaee;border-radius:999px;overflow:hidden}.skillbar>div{height:100%;background:var(--air)}
+.pos-diff{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pos-diff>div{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fafcfd}
+
+body[data-pos="air"]{--pos-accent:#16a6b6}
+body[data-pos="smaregi"]{--pos-accent:#2b6cb0}
+body[data-pos="square"]{--pos-accent:#111}
+.pos-skin{border-left:5px solid var(--pos-accent,var(--air));padding-left:10px}
+.mode-nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.mode-nav button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 10px}
+.mode-nav button.active{border-color:var(--pos-accent,var(--air));font-weight:700}
+.square-checkout{font-size:30px;font-weight:900}
+.smaregi-head{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f5f8fb;border:1px solid var(--line);border-radius:7px;margin-bottom:10px}
+.air-ticket-tabs{display:flex;gap:8px;margin-bottom:10px}.air-ticket-tabs button{padding:8px 12px;border:1px solid var(--line);background:#fff;border-radius:5px}
+.air-ticket-tabs button.active{background:#e7f7f9;border-color:#8fd7de}
+
+.pos-training-grid{display:grid;grid-template-columns:minmax(0,1.25fr) 380px;gap:14px}
+.pos-training-card{padding:16px}
+.case-list{display:grid;gap:7px;max-height:360px;overflow:auto}
+.case-item{padding:10px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.case-item.active{border-color:var(--pos-accent,var(--air));background:#f7fbfc}
+.case-status{font-size:12px;color:var(--muted)}
+.case-pass{color:#168a5b;font-weight:700}.case-fail{color:#b3423d;font-weight:700}
+@media(max-width:900px){.pos-training-grid{grid-template-columns:1fr}}
+
+:root{
+  --radius:10px;
+  --shadow:0 4px 16px rgba(20,35,50,.08);
+  --shadow-soft:0 2px 8px rgba(20,35,50,.06);
+}
+.card{border-radius:var(--radius);box-shadow:var(--shadow-soft)}
+.primary,.secondary,.paymethod,.product,.navbtn,.tab,.linkbtn{transition:transform .08s ease,box-shadow .12s ease,background .12s ease}
+.primary:active,.secondary:active,.paymethod:active,.product:active,.tab:active{transform:scale(.985)}
+.primary:focus-visible,.secondary:focus-visible,.paymethod:focus-visible,.product:focus-visible,.navbtn:focus-visible,.tab:focus-visible{
+  outline:3px solid rgba(22,166,182,.28);outline-offset:2px
+}
+.product{box-shadow:0 1px 3px rgba(20,35,50,.05)}
+.product:hover{box-shadow:var(--shadow-soft)}
+.paymethod{min-height:72px}
+.navbtn{min-height:48px}
+.topbar{position:sticky;top:0;z-index:20}
+.main{scroll-behavior:smooth}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.subtle{color:var(--muted);font-size:13px}
+.empty-state{padding:42px 16px;text-align:center;color:var(--muted)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#168a5b;margin-right:6px}
+.onboard-overlay{position:fixed;inset:0;background:rgba(17,26,34,.72);display:none;align-items:center;justify-content:center;padding:18px;z-index:80}
+.onboard-overlay.show{display:flex}
+.onboard-card{width:min(720px,96vw);max-height:90vh;overflow:auto;background:white;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:22px}
+.onboard-step{display:none}.onboard-step.active{display:block}
+.onboard-progress{display:flex;gap:6px;margin:12px 0 18px}
+.onboard-progress span{height:6px;flex:1;border-radius:999px;background:#dfe6eb}
+.onboard-progress span.active{background:var(--air)}
+.terms-panel{max-width:900px;margin:auto;padding:18px}
+.terms-panel h3{margin-top:20px}
+.legal-note{padding:12px;border-radius:8px;background:#f6f8fa;border:1px solid var(--line);font-size:13px;color:#4c5966}
+.ipad-safe{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));padding-bottom:max(10px,env(safe-area-inset-bottom))}
+@media (min-width:1024px) and (max-width:1400px){
+  .products{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .order-grid{grid-template-columns:minmax(0,1.35fr) minmax(360px,.85fr)}
+}
+@media (orientation:portrait) and (max-width:1024px){
+  .order-grid,.pay-wrap,.game-grid,.queue-grid,.audit-grid,.realistic-grid,.pos-training-grid{grid-template-columns:1fr!important}
+  .sidebar{display:none}
+  .topbar{flex-wrap:wrap;height:auto;min-height:58px;padding:8px 12px}
+  .pos-switch{width:100%;overflow-x:auto;flex-wrap:nowrap}
+  .pos-switch button{white-space:nowrap}
+  .main{padding:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="onboard-overlay" id="onboardOverlay">
+  <div class="onboard-card">
+    <div class="section-title">
+      <div><span class="badge">初回チュートリアル</span><h2 style="margin:6px 0 0">Universal POS Trainer</h2></div>
+      <button class="secondary" id="skipOnboarding">スキップ</button>
+    </div>
+    <div class="onboard-progress">
+      <span data-obp="0"></span><span data-obp="1"></span><span data-obp="2"></span><span data-obp="3"></span>
+    </div>
+
+    <div class="onboard-step" data-obs="0">
+      <h3>1. POSを選ぶ</h3>
+      <p>上部の切替から Airレジ / スマレジ / Square を選びます。POSごとに支払方法・画面名称・課題が変わります。</p>
+    </div>
+    <div class="onboard-step" data-obs="1">
+      <h3>2. 基本会計を覚える</h3>
+      <p>商品選択 → 数量・割引確認 → 支払い画面 → 支払方法 → 会計完了、という基本動線を反復します。</p>
+    </div>
+    <div class="onboard-step" data-obs="2">
+      <h3>3. 実務シナリオで練習</h3>
+      <p>返品、取消、個別会計、締め作業、現金過不足、領収書などをPOS別シナリオで練習できます。</p>
+    </div>
+    <div class="onboard-step" data-obs="3">
+      <h3>4. 実機前の最終確認</h3>
+      <p>このアプリは訓練用です。実店舗では店舗ルール、端末設定、決済会社の手順を優先してください。</p>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="secondary" id="onboardPrev">戻る</button>
+      <button class="primary" style="width:auto" id="onboardNext">次へ</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="ipad-safe">
+  <header class="topbar">
+    <div class="brand">UNIVERSAL POS TRAINER <small>v1.3 RC</small></div>
+<div class="pos-switch"><button class="active" data-pos="air">Airレジ</button><button data-pos="smaregi">スマレジ</button><button data-pos="square">Square</button></div>
+    <div class="spacer"></div>
+    <div id="modeBadge" class="badge">自由練習</div>
+    <div class="clock" id="clock"></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="navbtn" data-screen="poshome">POS選択・習熟度</button><button class="navbtn active" data-screen="order">注文入力・会計</button>
+      <button class="navbtn" data-screen="history">伝票一覧</button>
+      <button class="navbtn" data-screen="training">トレーニング</button>
+<button class="navbtn" data-screen="staffgame">新人研修ゲーム</button>
+<button class="navbtn" data-screen="timedmode">時間制実務モード</button>
+<button class="navbtn" data-screen="errordrill">誤操作ドリル</button>
+<button class="navbtn" data-screen="realflow">実機フロー訓練</button>
+<button class="navbtn" data-screen="postraining">POS別実務シナリオ</button>
+<button class="navbtn" data-screen="operations">開店・締め・返品</button>
+      <button class="navbtn" data-screen="settings">設定</button>
+<button class="navbtn" data-screen="legal">利用規約・商標</button>
+    </aside>
+    <main class="main">
+      <section id="poshome" class="screen"><div class="card" style="padding:18px"><span class="badge">マルチPOS</span><h2>POS別トレーニング</h2><div class="pos-diff"><div><strong>Airレジ</strong><p class="small">Airペイ・返品・精算</p></div><div><strong>スマレジ</strong><p class="small">販売・履歴・締め</p></div><div><strong>Square</strong><p class="small">高速決済・タッチ決済</p></div></div><h3>モード差分</h3>
+<div id="posModeDescription" class="notice">Airレジは注文リスト/伝票情報/個別会計を重点再現します。</div>
+<h3>習熟度</h3><div class="skill-row"><span>Airレジ</span><div class="skillbar"><div id="skillAirBar"></div></div><strong id="skillAir">0</strong></div><div class="skill-row"><span>スマレジ</span><div class="skillbar"><div id="skillSmaregiBar"></div></div><strong id="skillSmaregi">0</strong></div><div class="skill-row"><span>Square</span><div class="skillbar"><div id="skillSquareBar"></div></div><strong id="skillSquare">0</strong></div></div></section>
+<section id="order" class="screen active">
+        <div class="pos-banner pos-skin" id="posBannerOrder">Airレジ モード</div>
+        <div id="modeSpecificHeader"></div>
+        <div class="mode-nav" id="modeNav"></div>
+        <div class="toolbar card" style="margin-bottom:10px">
+          <div class="title" id="orderTitle">注文入力</div><div class="grow"></div>
+          <button class="secondary touch-target" id="openOrderMenu">その他</button>
+        </div>
+        <div class="order-grid">
+          <div class="card product-panel">
+            <div class="category-tabs" id="categoryTabs"></div>
+            <div class="scanbox">
+  <input id="barcodeInput" inputmode="numeric" placeholder="バーコード番号を入力（例: 490000000001）">
+  <button class="secondary" id="scanBarcode">読取</button>
+</div>
+<div class="products" id="products"></div>
+          </div>
+          <div class="card order-panel">
+            <div class="order-head"><strong>注文入力</strong><span class="small" id="ticketNo">新規伝票</span></div>
+            <div class="order-list" id="orderList"></div>
+            <div class="summary">
+              <div class="sumrow"><span>小計</span><span id="subtotal">¥0</span></div>
+              <div class="sumrow"><span>割引</span><span id="discountTotal">¥0</span></div>
+              <div class="sumrow total"><span>合計</span><span id="grandTotal">¥0</span></div>
+              <div style="display:flex;gap:8px;margin:10px 0">
+                <button class="secondary" id="ticketDiscount">伝票割引</button>
+                <button class="secondary" id="clearOrder">全削除</button>
+<button class="secondary" id="individualPay">個別会計</button>
+              </div>
+              <div class="confirmbar">
+      <label><input type="checkbox" id="precheck"> 商品・数量・割引を確認済み</label>
+    </div>
+    <button class="primary" id="toPay">支払いへ進む</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="payment" class="screen">
+        <div class="pos-banner pos-skin" id="posBannerPayment">Airレジ モード</div>
+        <div id="paymentModeHeader"></div>
+        <div class="toolbar card" style="margin-bottom:10px">
+          <button class="secondary touch-target" id="backOrder2">‹ 戻る</button>
+          <div class="title" id="paymentTitle">お支払い</div><div class="grow"></div>
+        </div>
+        <div class="pay-wrap">
+          <div class="card pay-summary">
+            <button class="secondary" id="backOrder">← 注文入力へ戻る</button>
+            <h2>お支払い</h2>
+            <div id="payItems"></div>
+            <hr style="border:0;border-top:1px solid var(--line)">
+            <div class="payment-header"><span>お会計</span><span class="pay-total-big" id="payTotal">¥0</span></div>
+            <div class="sumrow"><span>支払済み</span><span id="paidSoFar">¥0</span></div>
+            <div class="sumrow"><span>残額</span><span id="remaining">¥0</span></div>
+          </div>
+          <div class="card pay-panel">
+            <div class="pay-methods" id="payMethods"></div>
+            <div class="amountbox">
+              <div class="small">お預り / 支払額</div>
+              <input id="cashInput" inputmode="numeric" value="0" readonly>
+              <div class="sumrow"><span>おつり</span><strong id="change">¥0</strong></div>
+            </div>
+            <div class="quickcash">
+              <button data-cash="exact">ちょうど</button><button data-cash="1000">¥1,000</button><button data-cash="5000">¥5,000</button>
+              <button data-cash="10000">¥10,000</button><button data-cash="remaining">残額</button><button id="clearCash">C</button>
+            </div>
+            <div class="keypad" id="keypad"></div>
+            <button class="secondary" id="addSplit" style="width:100%;margin-top:10px">この支払いを追加（併用）</button>
+            <div class="confirmbar">
+      <label><input type="checkbox" id="paycheck"> 支払方法・預り金を確認済み</label>
+    </div>
+    <button class="primary" id="checkout" style="margin-top:10px">会計する</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="complete" class="screen">
+        <div class="card complete">
+          <div class="check">✓</div>
+          <h1>会計完了</h1>
+          <div id="completeInfo"></div>
+          <div class="receipt" id="receipt"></div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="primary" style="width:auto" id="newOrder">注文入力・会計</button>
+            <button class="secondary" data-jump="history">伝票一覧</button>
+<button class="secondary" id="completeReceipt">領収書発行</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="history" class="screen">
+        <div class="card history">
+          <h2>伝票一覧</h2>
+          <table><thead><tr><th>時刻</th><th>伝票</th><th>金額</th><th>支払</th><th>状態</th><th>操作</th></tr></thead><tbody id="historyBody"></tbody></table>
+        </div>
+      </section>
+
+      <section id="training" class="screen">
+        <div class="training">
+          <div class="card mission">
+            <span class="badge">実務シナリオ</span>
+            <div class="mission-title" id="missionTitle"></div>
+            <p id="missionText"></p>
+            <div id="missionSteps"></div>
+            <div class="feedback" id="feedback">「開始」を押すと注文画面へ移動します。</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="primary" style="width:auto" id="startMission">開始</button>
+              <button class="secondary" id="nextMission">次の問題</button>
+            </div>
+          </div>
+          <div class="card score">
+            <h3>習熟度</h3>
+            <div class="sumrow"><span>クリア</span><strong id="clearCount">0</strong></div>
+            <div class="sumrow"><span>ミス</span><strong id="mistakeCount">0</strong></div>
+            <div class="sumrow"><span>操作数</span><strong id="actionCount">0</strong></div>
+            <div class="sumrow"><span>正確度</span><strong id="accuracy">100%</strong></div>
+            <p class="small">実機の完全複製ではなく、現行Airレジの主要操作フローを学ぶための訓練用UIです。</p>
+          </div>
+        </div>
+      </section>
+
+      
+
+<section id="staffgame" class="screen">
+ <div class="game-grid">
+  <div class="card game-card">
+   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <div><span class="badge">新人アルバイト研修</span><h2 style="margin:6px 0">レジ実務 10人連続チャレンジ</h2></div>
+    <button class="primary" style="width:auto" id="startStaffGame">研修開始</button>
+   </div>
+   <div class="customer">
+    <div class="avatar" id="customerAvatar">👤</div>
+    <div><div class="small" id="customerSeq">未開始</div><div><strong id="customerName">お客様</strong></div>
+    <div class="request" id="customerRequest">開始するとランダムな接客要求が出題されます。</div></div>
+   </div>
+   <div style="margin:14px 0"><div class="sumrow"><span>進行</span><span id="gameProgressText">0 / 10</span></div>
+   <div class="progressbar"><div id="gameProgressBar"></div></div></div>
+   <div class="notice">注文・支払・割引・返品などを実際の画面で処理し、判定してください。</div>
+   <div class="action-grid">
+    <button class="secondary" id="gameGoOrder">注文入力へ</button>
+    <button class="secondary" id="gameGoHistory">伝票一覧へ</button>
+    <button class="secondary" id="gameGoOps">開店・締めへ</button>
+    <button class="secondary" id="gameJudge">この接客を判定</button>
+   </div>
+   <h3>接客ログ</h3><div class="logbox" id="gameLog"><div class="small">まだ記録はありません。</div></div>
+  </div>
+  <div class="card game-card">
+   <h3>リアルタイム評価</h3>
+   <div class="ops-grid" style="grid-template-columns:1fr 1fr">
+    <div class="metric"><span class="small">スコア</span><strong id="gameScore">100</strong></div>
+    <div class="metric"><span class="small">正解</span><strong id="gameCorrect">0</strong></div>
+    <div class="metric"><span class="small">ミス</span><strong id="gameErrors">0</strong></div>
+    <div class="metric"><span class="small">平均操作数</span><strong id="gameAvgActions">0</strong></div>
+   </div>
+   <div id="gameFinal" style="display:none;margin-top:16px"><div class="grade" id="gameGrade">A</div>
+   <div style="text-align:center;font-weight:700" id="gameFinalText"></div>
+   <button class="primary" id="restartStaffGame" style="margin-top:12px">もう一度挑戦</button></div>
+  </div>
+ </div>
+</section>
+
+
+<section id="timedmode" class="screen">
+ <div class="queue-grid">
+  <div class="card queue-card">
+   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <div><span class="badge">実務負荷訓練</span><h2 style="margin:6px 0">5分間レジラッシュ</h2></div>
+    <button class="primary" style="width:auto" id="startTimedMode">開始</button>
+   </div>
+   <div class="sumrow"><span>残り時間</span><span class="timer" id="timedClock">05:00</span></div>
+   <div class="sumrow"><span>処理件数</span><strong id="timedDone">0</strong></div>
+   <div class="sumrow"><span>待ち人数</span><strong id="timedQueueCount">0</strong></div>
+   <div class="progressbar"><div id="timedProgress"></div></div>
+
+   <h3>現在のお客様</h3>
+   <div class="customer">
+    <div class="avatar" id="timedAvatar">👤</div>
+    <div><div class="small" id="timedCustomerName">未開始</div><div class="request" id="timedRequest">開始すると接客が始まります。</div></div>
+   </div>
+
+   <div class="taxbox" style="margin-top:12px">
+    <div class="small">今回の注文条件</div>
+    <div id="timedConditions">—</div>
+   </div>
+
+   <div class="action-grid">
+    <button class="secondary" id="timedGoOrder">注文入力</button>
+    <button class="secondary" id="timedGoPay">支払い画面</button>
+    <button class="secondary" id="timedServe">処理完了を判定</button>
+    <button class="secondary" id="timedSkip">この客をスキップ</button>
+   </div>
+
+   <h3>待ち行列</h3>
+   <div class="queue-list" id="timedQueue"></div>
+  </div>
+
+  <div class="card queue-card">
+   <h3>実務オプション</h3>
+   <div class="small">利用形態</div>
+   <div class="option-row" id="diningOptions">
+    <button class="secondary active" data-dining="店内">店内</button>
+    <button class="secondary" data-dining="持ち帰り">持ち帰り</button>
+   </div>
+   <br>
+   <div class="small">レジ袋</div>
+   <div class="option-row" id="bagOptions">
+    <button class="secondary active" data-bag="なし">なし</button>
+    <button class="secondary" data-bag="あり">あり</button>
+   </div>
+   <br>
+   <div class="small">税率</div>
+   <div class="option-row" id="taxOptions">
+    <button class="secondary active" data-tax="10">10%</button>
+    <button class="secondary" data-tax="8">8%</button>
+   </div>
+
+   <h3>釣銭を渡す</h3>
+   <div class="small">必要なおつり</div>
+   <div class="sumrow total"><span></span><span id="requiredChange">¥0</span></div>
+   <div class="coin-grid" id="changeCoins"></div>
+   <div class="sumrow"><span>選択中</span><strong id="selectedChange">¥0</strong></div>
+   <button class="secondary" id="clearChangeCoins" style="width:100%">釣銭選択をクリア</button>
+
+   <h3>領収書・レシート</h3>
+   <div class="receipt-tools">
+    <button class="secondary" id="issueReceipt">領収書を発行</button>
+    <button class="secondary" id="reprintReceipt">レシート再発行</button>
+   </div>
+
+   <h3>評価</h3>
+   <div class="ops-grid" style="grid-template-columns:1fr 1fr">
+    <div class="metric"><span class="small">スコア</span><strong id="timedScore">100</strong></div>
+    <div class="metric"><span class="small">ミス</span><strong id="timedErrors">0</strong></div>
+   </div>
+   <div id="timedResult" class="notice" style="display:none"></div>
+  </div>
+ </div>
+</section>
+
+
+<section id="errordrill" class="screen">
+ <div class="audit-grid">
+  <div class="card audit-card">
+   <span class="badge">誤操作対策</span>
+   <h2>レジミス検知ドリル</h2>
+   <p>わざとミスが起きやすい条件を出し、会計結果を自動監査します。</p>
+   <div class="scenario-card">
+    <div class="small" id="errorCaseNo">未開始</div>
+    <div class="airlike-title" id="errorCaseTitle">開始してください</div>
+    <p id="errorCaseText">数量、値引き、支払方法、領収書、返品などをチェックします。</p>
+   </div>
+   <div class="action-grid">
+    <button class="primary" id="startErrorDrill">ドリル開始</button>
+    <button class="secondary" id="errorGoOrder">注文入力へ</button>
+    <button class="secondary" id="errorGoHistory">伝票一覧へ</button>
+    <button class="secondary" id="errorJudge">監査する</button>
+   </div>
+   <h3>監査結果</h3>
+   <div id="auditResults"><div class="small">まだ監査していません。</div></div>
+  </div>
+
+  <div class="card audit-card">
+   <h3>ミス統計</h3>
+   <div class="mini-kpi">
+    <div><span class="small">正解</span><strong id="errorCorrect">0</strong></div>
+    <div><span class="small">ミス</span><strong id="errorMistakes">0</strong></div>
+    <div><span class="small">連続正解</span><strong id="errorStreak">0</strong></div>
+   </div>
+   <h3>ミス内訳</h3>
+   <div id="errorBreakdown"></div>
+  </div>
+ </div>
+</section>
+
+
+<section id="realflow" class="screen">
+ <div class="realistic-grid">
+  <div class="card realistic-card">
+   <span class="badge">現行Airレジ仕様ベース</span>
+   <h2>実機フロー訓練</h2>
+   <div class="step-strip">
+    <span class="step-chip active">1 注文入力</span>
+    <span class="step-chip">2 支払いへ進む</span>
+    <span class="step-chip">3 支払方法・金額</span>
+    <span class="step-chip">4 会計する</span>
+    <span class="step-chip">5 完了後操作</span>
+   </div>
+   <div class="scenario-card">
+    <div class="small">今回の課題</div>
+    <div class="airlike-title" id="realCaseTitle">開始してください</div>
+    <p id="realCaseText">現行仕様に沿ったフローで処理します。</p>
+   </div>
+   <div class="action-grid">
+    <button class="primary" id="startRealFlow">開始</button>
+    <button class="secondary" id="realGoOrder">注文入力</button>
+    <button class="secondary" id="realGoHistory">取引履歴</button>
+    <button class="secondary" id="realGoOps">点検・精算</button>
+    <button class="secondary" id="realJudge">フロー判定</button>
+   </div>
+   <h3>判定ログ</h3>
+   <div id="realFlowLog" class="logbox"><div class="small">未開始</div></div>
+  </div>
+
+  <div class="card realistic-card">
+   <h3>現行ルール</h3>
+   <div class="rulebox"><strong>通常会計</strong><br>注文入力 → 支払いへ進む → お支払い → 会計する。</div>
+   <div class="rulebox"><strong>QR決済（Airペイ）</strong><br>金額欄を選ぶと全額が入り、現金との併用は不可。</div>
+   <div class="rulebox"><strong>当日訂正</strong><br>営業日の変更時刻前なら「レジ締め前伝票」から削除・必要に応じて訂正伝票。</div>
+   <div class="rulebox"><strong>翌営業日以降</strong><br>取引履歴では金額修正のみ。注文数量変更や伝票削除・訂正は不可。</div>
+   <div class="rulebox"><strong>点検・精算</strong><br>翌営業日のつり銭準備金は「指定」「全額繰越」「なし」から選択。</div>
+  </div>
+ </div>
+</section>
+
+
+<section id="postraining" class="screen">
+ <div class="pos-training-grid">
+  <div class="card pos-training-card">
+   <span class="badge">POS専用カリキュラム</span>
+   <h2 id="posTrainingTitle">Airレジ 実務シナリオ</h2>
+   <div class="scenario-card">
+    <div class="small" id="posCaseNo">未開始</div>
+    <div class="airlike-title" id="posCaseTitle">開始してください</div>
+    <p id="posCaseText">現在選択中のPOS専用問題を出題します。</p>
+   </div>
+   <div class="action-grid">
+    <button class="primary" id="startPosTraining">開始</button>
+    <button class="secondary" id="posTrainGoOrder">注文画面</button>
+    <button class="secondary" id="posTrainGoHistory">履歴</button>
+    <button class="secondary" id="posTrainGoOps">締め処理</button>
+    <button class="secondary" id="judgePosTraining">判定</button>
+   </div>
+   <h3>判定結果</h3>
+   <div id="posTrainingFeedback" class="feedback">未開始</div>
+  </div>
+
+  <div class="card pos-training-card">
+   <h3>カリキュラム</h3>
+   <div class="case-list" id="posCaseList"></div>
+   <h3>成績</h3>
+   <div class="sumrow"><span>正解</span><strong id="posTrainCorrect">0</strong></div>
+   <div class="sumrow"><span>ミス</span><strong id="posTrainErrors">0</strong></div>
+   <div class="sumrow"><span>進捗</span><strong id="posTrainProgress">0%</strong></div>
+  </div>
+ </div>
+</section>
+
+<section id="operations" class="screen">
+  <div class="ops-grid">
+    <div class="card ops-card">
+      <h2>開店準備</h2>
+      <div class="sumrow"><span>営業状態</span><strong id="businessState">未開店</strong></div>
+      <label>つり銭準備金</label>
+      <div class="scanbox"><input id="openingFloat" inputmode="numeric" value="30000"><button class="primary" style="width:auto" id="openRegister">開店</button></div>
+      <div class="notice">実務では、金種別に現金を確認してレジ内金額と一致させます。</div>
+      <button class="secondary" id="cashInBtn">入金 +1,000円</button>
+      <button class="secondary" id="cashOutBtn">出金 -1,000円</button>
+    </div>
+
+    <div class="card ops-card">
+      <h2>レジ点検・精算</h2>
+      <p class="small">ドロアの現金を数え、理論残高との差額を確認する訓練です。</p>
+      <div class="cash-count"><span>10,000円札 ×</span><input class="denom" data-denom="10000" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>5,000円札 ×</span><input class="denom" data-denom="5000" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>1,000円札 ×</span><input class="denom" data-denom="1000" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>500円硬貨 ×</span><input class="denom" data-denom="500" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>100円硬貨 ×</span><input class="denom" data-denom="100" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>50円硬貨 ×</span><input class="denom" data-denom="50" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>10円硬貨 ×</span><input class="denom" data-denom="10" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>5円硬貨 ×</span><input class="denom" data-denom="5" type="number" min="0" value="0"></div>
+      <div class="cash-count"><span>1円硬貨 ×</span><input class="denom" data-denom="1" type="number" min="0" value="0"></div>
+      <div class="sumrow"><span>実在高</span><strong id="actualCash">¥0</strong></div>
+      <div class="sumrow"><span>理論残高</span><strong id="expectedCash">¥0</strong></div>
+      <div class="sumrow total"><span>過不足</span><strong id="cashDiff">¥0</strong></div>
+      <div style="margin:12px 0">
+      <div class="small">翌営業日のつり銭準備金</div>
+      <div class="segment" id="carryMode">
+        <button class="active" data-carry="指定">指定</button>
+        <button data-carry="全額繰越">全額繰越</button>
+        <button data-carry="なし">なし</button>
+      </div>
+      <div class="scanbox" id="carryInputWrap">
+        <input id="nextFloat" inputmode="numeric" value="30000">
+      </div>
+      <label><input type="checkbox" id="printSettlement"> 精算レシートを印刷</label><br>
+      <label><input type="checkbox" id="printJournal"> ジャーナルを印刷</label>
+      <div class="sumrow"><span>預入金</span><strong id="depositAmount">¥0</strong></div>
+    </div>
+    <button class="primary" id="closeRegister">精算する</button>
+    </div>
+
+    <div class="card ops-card">
+      <h2>返品・返金訓練</h2>
+      <p>伝票一覧から対象伝票の「返品」を選びます。</p>
+      <div class="notice">キャッシュレス取引では、POS上の返品記録だけでなく、決済アプリ側の取消・返金確認が必要なケースがあります。</div>
+      <label><input type="checkbox" id="paymentAppConfirmed"> 決済アプリ側の取消・返金を確認済み</label>
+      <p class="small">現金伝票ではこの確認は不要です。</p>
+    </div>
+
+    <div class="card ops-card">
+      <h2>ランダム接客</h2>
+      <div class="scenario-card">
+        <span class="pill">客からの要求</span>
+        <h3 id="randomScenarioTitle">未出題</h3>
+        <p id="randomScenarioText">「出題」を押してください。</p>
+        <button class="primary" id="randomScenario">ランダム出題</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="legal" class="screen">
+  <div class="card terms-panel">
+    <span class="badge">公開版向け</span>
+    <h2>利用規約・商標に関する表示</h2>
+
+    <div class="legal-note">
+      本アプリはPOS操作の学習・訓練を目的とする独立したシミュレーターです。
+      実在するPOSサービスの公式アプリ、公式教材、認定製品ではありません。
+    </div>
+
+    <h3>1. 利用目的</h3>
+    <p>本アプリは、レジ業務の基本操作、会計フロー、返品・取消・締め作業などを模擬的に学習するためのものです。</p>
+
+    <h3>2. 実店舗での利用</h3>
+    <p>実店舗では、勤務先のマニュアル、責任者の指示、POS事業者・決済事業者が提供する最新手順を優先してください。本アプリの操作結果を実取引の保証として使用しないでください。</p>
+
+    <h3>3. 商標</h3>
+    <p>「Airレジ」「スマレジ」「Square」その他記載される製品名・サービス名は、それぞれの権利者の商標または登録商標である場合があります。本アプリは各権利者との提携・承認・後援関係を示すものではありません。</p>
+
+    <h3>4. 画面・コンテンツ</h3>
+    <p>本アプリは実在POSのロゴ、公式画面画像、公式アイコン等を複製せず、公開情報を参考に独自UIで業務フローを再構成しています。</p>
+
+    <h3>5. 免責</h3>
+    <p>実際のPOS仕様、料金、対応決済、画面構成、法令・税率等は変更される場合があります。公開前・業務利用前には必ず最新の公式情報を確認してください。</p>
+
+    <h3>6. 学習データ</h3>
+    <p>習熟度・履歴等はブラウザのLocalStorageに保存されます。端末やブラウザのデータ削除により消去される場合があります。</p>
+  </div>
+</section>
+
+<section id="settings" class="screen">
+        <div class="card" style="padding:18px;max-width:800px">
+          <h2>設定</h2>
+          <label><input type="checkbox" id="oneTouch" checked> 現金のワンタッチ会計を想定</label><br><br>
+          <label><input type="checkbox" id="soundOn" checked> 操作音</label><br><br>
+          <button class="secondary" id="replayOnboarding">初回チュートリアルを再表示</button>
+    <button class="secondary danger" id="resetData">履歴・スコアを初期化</button>
+    <div class="legal-note" style="margin-top:14px">
+      推奨: iPad横向き / Safari。縦向きでも利用できますが、商品一覧と会計欄は縦並びになります。
+    </div>
+          <p class="small">商品名・価格は練習用の架空データです。Airレジ / Airペイの商標・画面資産を複製していません。</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="discountModal">
+  <div class="modalbox">
+    <h3 id="discountTitle">割引</h3>
+    <div class="discount-grid">
+      <button data-disc="5">5%引き</button><button data-disc="10">10%引き</button><button data-disc="20">20%引き</button>
+      <button data-disc-yen="50">50円引き</button><button data-disc-yen="100">100円引き</button><button data-disc-yen="500">500円引き</button>
+    </div>
+    <button class="secondary" id="closeDiscount" style="margin-top:12px;width:100%">閉じる</button>
+  </div>
+</div>
+
+<div class="modal" id="individualModal">
+  <div class="modalbox">
+    <h3>個別会計</h3>
+    <p class="small">この練習版では、会計する商品行を選択して別会計にします。</p>
+    <div class="split-list" id="individualList"></div>
+    <div class="sumrow total"><span>選択合計</span><span id="individualTotal">¥0</span></div>
+    <button class="primary" id="confirmIndividual">選択分を会計へ</button>
+    <button class="secondary" id="closeIndividual" style="width:100%;margin-top:8px">閉じる</button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="orderMenuSheet">
+  <h3 style="margin-top:0">注文入力メニュー</h3>
+  <div class="action-grid">
+    <button class="secondary" id="sheetTicketDiscount">伝票割引</button>
+    <button class="secondary" id="sheetIndividual">個別会計</button>
+    <button class="secondary" id="sheetClear">注文をすべて削除</button>
+    <button class="secondary" id="sheetTraining">トレーニングへ</button>
+  </div>
+  <button class="secondary" style="width:100%;margin-top:10px" id="closeOrderMenu">閉じる</button>
+</div>
+
+<div class="modal" id="confirmModal">
+  <div class="modalbox">
+    <h3 id="confirmTitle">確認</h3>
+    <p id="confirmText"></p>
+    <div class="dialog-actions">
+      <button class="secondary" id="confirmCancel">キャンセル</button>
+      <button class="primary" id="confirmOk">実行</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="detailModal">
+  <div class="modalbox">
+    <h3>取引詳細</h3>
+    <div id="detailContent"></div>
+    <button class="secondary" id="closeDetail" style="width:100%;margin-top:12px">閉じる</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+
+
+const POS_SCENARIOS={
+ air:[
+  {t:'基本現金会計',x:'コーヒー1杯を現金500円で会計。',items:{'コーヒー':1},m:'現金',tender:500},
+  {t:'クレジット会計',x:'パスタ1個をクレジットカードで会計。',items:{'パスタ':1},m:'クレジットカード'},
+  {t:'AirペイQR',x:'カレー1個をQR決済（Airペイ）で全額会計。',items:{'カレー':1},m:'QR決済（Airペイ）'},
+  {t:'伝票10%割引',x:'カレーと紅茶を伝票10%引き、現金2,000円で。',items:{'カレー':1,'紅茶':1},m:'現金',ticketDisc:'10%',tender:2000},
+  {t:'商品100円引き',x:'コーヒー豆を100円引き、現金2,000円。',items:{'コーヒー豆 200g':1},m:'現金',itemDiscountYen:100,tender:2000},
+  {t:'商品券併用',x:'パスタを商品券500円＋残額現金で。',items:{'パスタ':1},m:'現金',split:{method:'商品券',amount:500}},
+  {t:'個別会計',x:'サンドイッチとコーヒー。サンドイッチだけ先に別会計。',special:'individual'},
+  {t:'現金返品',x:'直前の現金会計を返品。',special:'returnCash'},
+  {t:'カード返品',x:'クレジット会計を返品し、決済側取消も確認。',special:'returnCard'},
+  {t:'当日取消',x:'レジ締め前伝票を取消。',special:'sameDayVoid'},
+  {t:'翌営業日修正',x:'営業日変更後の取引を金額修正。',special:'nextDayAdjust'},
+  {t:'点検・精算',x:'過不足0円、翌営業日のつり銭を指定して精算。',special:'settlement'}
+ ],
+ smaregi:[
+  {t:'販売業務・現金',x:'プリン2個を現金1,000円で販売。',items:{'プリン':2},m:'現金',tender:1000},
+  {t:'販売業務・カード',x:'チーズケーキ1個をクレジットカードで販売。',items:{'チーズケーキ':1},m:'クレジットカード'},
+  {t:'電子マネー',x:'カフェラテ1杯を電子マネーで販売。',items:{'カフェラテ':1},m:'電子マネー'},
+  {t:'QRコード',x:'オレンジジュース1杯をQRコードで販売。',items:{'オレンジジュース':1},m:'QRコード'},
+  {t:'商品券＋現金',x:'コーヒー豆を商品券500円＋現金で。',items:{'コーヒー豆 200g':1},m:'現金',split:{method:'商品券',amount:500}},
+  {t:'商品割引',x:'サラダを20%引き、カードで。',items:{'サラダ':1},m:'クレジットカード',itemDiscountPct:20},
+  {t:'伝票割引',x:'パスタ＋紅茶を10%引き、現金2,000円。',items:{'パスタ':1,'紅茶':1},m:'現金',ticketDisc:'10%',tender:2000},
+  {t:'取引履歴確認',x:'直前取引を取引履歴から詳細確認。',special:'historyDetail'},
+  {t:'現金返品',x:'現金取引を返品。',special:'returnCash'},
+  {t:'取引取消',x:'締め前の誤取引を取消。',special:'sameDayVoid'},
+  {t:'金額修正',x:'営業日変更後の取引を金額修正。',special:'nextDayAdjust'},
+  {t:'締め処理',x:'現金過不足0円で精算。',special:'settlement'}
+ ],
+ square:[
+  {t:'現金チェックアウト',x:'コーヒー1杯を現金500円で。',items:{'コーヒー':1},m:'現金',tender:500},
+  {t:'カード',x:'パスタ1個をカードで支払い。',items:{'パスタ':1},m:'カード'},
+  {t:'タッチ決済',x:'カフェラテ1杯をタッチ決済。',items:{'カフェラテ':1},m:'タッチ決済'},
+  {t:'QRコード',x:'プリン1個をQRコードで。',items:{'プリン':1},m:'QRコード'},
+  {t:'数量変更',x:'アイスを3個、カードで。',items:{'アイス':3},m:'カード'},
+  {t:'商品割引',x:'サラダを20%引き、タッチ決済。',items:{'サラダ':1},m:'タッチ決済',itemDiscountPct:20},
+  {t:'伝票割引',x:'サンドイッチ＋コーヒーを10%引き、カードで。',items:{'サンドイッチ':1,'コーヒー':1},m:'カード',ticketDisc:'10%'},
+  {t:'領収書',x:'コーヒー豆を現金2,000円、領収書発行。',items:{'コーヒー豆 200g':1},m:'現金',tender:2000,receipt:true},
+  {t:'取引確認',x:'直前取引を取引画面から確認。',special:'historyDetail'},
+  {t:'現金返品',x:'現金取引を返品。',special:'returnCash'},
+  {t:'カード返品',x:'カード取引を返品。',special:'returnCardSimple'},
+  {t:'締め確認',x:'現金過不足0円を確認して締める。',special:'settlement'}
+ ]
+};
+
+function posScenarioList(){return POS_SCENARIOS[state.posMode]||POS_SCENARIOS.air}
+function startPosTraining(){
+ state.posTraining={index:0,correct:0,errors:0,results:[],historyStart:state.history.length}; nextPosTrainingCase();
+}
+function seedTrainingTicket(method){
+ let n=method==='現金'?'プリン':'コーヒー',amt=method==='現金'?390:350;
+ let seeded={time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),no:'#T'+String(Date.now()).slice(-5),amount:amt,tender:method==='現金'?500:amt,items:{[n]:1},method:[method],splits:[],ticketDisc:'なし',itemDiscountYen:0,itemDiscountPct:0,status:'会計'};
+ state.history.unshift(seeded);if(state.posTraining)state.posTraining.seedNo=seeded.no;
+ localStorage.setItem('posHistory',JSON.stringify(state.history));renderHistory();
+}
+function nextPosTrainingCase(){
+ let g=state.posTraining,cases=posScenarioList();if(!g)return;
+ renderPosCaseList();
+ if(g.index>=cases.length){
+   document.querySelector('#posCaseNo').textContent='完了';
+   document.querySelector('#posCaseTitle').textContent='カリキュラム終了';
+   document.querySelector('#posCaseText').textContent=`${g.correct}/${cases.length} 正解`;
+   document.querySelector('#posTrainingFeedback').className='feedback ok';
+   document.querySelector('#posTrainingFeedback').textContent='全シナリオ終了。';
+   show('postraining'); updatePosTrainingHUD(); return;
+ }
+ let c=cases[g.index];g.current=c;g.beforeTopNo=state.history[0]?.no||null;g.seedNo=null;state.lastDetailNo=null;resetOrder();state.receiptIssued=false;state.businessDayClosed=false;
+ document.querySelector('#posTrainingTitle').textContent=currentProfile().label+' 実務シナリオ';
+ document.querySelector('#posCaseNo').textContent=`${g.index+1} / ${cases.length}`;
+ document.querySelector('#posCaseTitle').textContent=c.t;document.querySelector('#posCaseText').textContent=c.x;
+ document.querySelector('#posTrainingFeedback').className='feedback';document.querySelector('#posTrainingFeedback').textContent='操作後に判定してください。';
+ if(c.special==='returnCash'){seedTrainingTicket('現金');show('history')}
+ else if(c.special==='returnCard'||c.special==='returnCardSimple'){seedTrainingTicket(state.posMode==='square'?'カード':'クレジットカード');show('history')}
+ else if(c.special==='sameDayVoid'){seedTrainingTicket('現金');show('history')}
+ else if(c.special==='nextDayAdjust'){seedTrainingTicket('現金');state.businessDayClosed=true;show('history')}
+ else if(c.special==='historyDetail'){seedTrainingTicket('現金');show('history')}
+ else if(c.special==='settlement'){
+   state.businessOpen=true;state.openingFloat=30000;state.cashAdjust=0;
+   document.querySelector('#businessState').textContent='営業中';
+   document.querySelectorAll('.denom').forEach(x=>x.value=0);
+   let rest=expectedCash(),ds=[10000,5000,1000,500,100,50,10,5,1];
+   ds.forEach(d=>{let el=document.querySelector(`.denom[data-denom="${d}"]`);if(el){let q=Math.floor(rest/d);el.value=q;rest-=q*d}});
+   updateCashCount();show('operations')
+ } else if(c.special==='individual'){show('order')}
+ else show('order');
+ updatePosTrainingHUD();
+}
+function judgePosTraining(){
+ let g=state.posTraining;if(!g){toast('開始してください');return}
+ let c=g.current,r=state.history[0],ok=false,reason='';
+ if(c.special==='returnCash'){ok=state.history.some(x=>x.status==='返品'&&x.sourceNo===g.seedNo&&x.method.includes('現金'));reason='現金返品'}
+ else if(c.special==='returnCard'){ok=state.history.some(x=>x.status==='返品'&&x.sourceNo===g.seedNo&&x.method.includes('クレジットカード'))&&document.querySelector('#paymentAppConfirmed').checked;reason='カード返品＋決済確認'}
+ else if(c.special==='returnCardSimple'){ok=state.history.some(x=>x.status==='返品'&&x.sourceNo===g.seedNo&&x.method.includes('カード'));reason='カード返品'}
+ else if(c.special==='sameDayVoid'){ok=state.history.some(x=>x.no===g.seedNo&&x.status==='取消');reason='取消'}
+ else if(c.special==='nextDayAdjust'){ok=state.history.some(x=>x.no===g.seedNo&&x.status==='金額修正');reason='金額修正'}
+ else if(c.special==='historyDetail'){ok=document.querySelector('#detailModal').classList.contains('show')&&state.lastDetailNo===g.seedNo;reason='取引詳細'}
+ else if(c.special==='settlement'){let cc=updateCashCount();ok=!state.businessOpen&&cc.d===0;reason='精算'}
+ else if(c.special==='individual'){let nr=state.history[0];ok=!!nr&&nr.no!==g.beforeTopNo&&nr.items?.['サンドイッチ']===1&&!!window.__remainingCartAfterPay?.some(x=>x.n==='コーヒー');reason='個別会計'}
+ else if(r && r.no!==g.beforeTopNo){
+   ok=gameItemsMatch(r.items,c.items)&&r.method.includes(c.m);
+   if(c.tender)ok=ok&&r.tender>=c.tender;
+   if(c.ticketDisc)ok=ok&&r.ticketDisc===c.ticketDisc;
+   if(c.itemDiscountYen)ok=ok&&(r.itemDiscountYen||0)>=c.itemDiscountYen;
+   if(c.itemDiscountPct)ok=ok&&(r.itemDiscountPct||0)===c.itemDiscountPct;
+   if(c.split)ok=ok&&r.splits?.some(x=>x.method===c.split.method&&x.amount===c.split.amount);
+   if(c.receipt)ok=ok&&state.receiptIssued;
+   reason='商品・数量・割引・支払条件';
+ }
+ if(ok){g.correct++;g.results[g.index]='pass';addSkill(3);document.querySelector('#posTrainingFeedback').className='feedback ok';document.querySelector('#posTrainingFeedback').textContent='正解'}
+ else{g.errors++;g.results[g.index]='fail';document.querySelector('#posTrainingFeedback').className='feedback ng';document.querySelector('#posTrainingFeedback').textContent='不正解：'+reason+'を確認'}
+ document.querySelector('#detailModal')?.classList.remove('show');g.index++;updatePosTrainingHUD();renderPosCaseList();setTimeout(nextPosTrainingCase,300);
+}
+function updatePosTrainingHUD(){
+ let g=state.posTraining,cases=posScenarioList();if(!g)return;
+ document.querySelector('#posTrainCorrect').textContent=g.correct;document.querySelector('#posTrainErrors').textContent=g.errors;
+ document.querySelector('#posTrainProgress').textContent=Math.round(g.index/cases.length*100)+'%';
+}
+function renderPosCaseList(){
+ let g=state.posTraining,cases=posScenarioList();
+ document.querySelector('#posCaseList').innerHTML=cases.map((c,i)=>`<div class="case-item ${g&&g.index===i?'active':''}"><strong>${i+1}. ${c.t}</strong><div class="case-status">${g?.results?.[i]==='pass'?'<span class="case-pass">正解</span>':g?.results?.[i]==='fail'?'<span class="case-fail">ミス</span>':'未実施'}</div></div>`).join('');
+}
+
+const POS_PROFILES={
+ air:{
+  label:'Airレジ',
+  methods:['現金','クレジットカード','電子マネー','QR決済（Airペイ）','商品券'],
+  qrNoSplit:true,
+  orderTitle:'注文入力',
+  paymentTitle:'お支払い',
+  nav:['注文リスト','伝票情報','個別会計'],
+  header:'<div class="air-ticket-tabs"><button class="active">注文リスト</button><button>伝票情報</button></div>',
+  payHeader:'<div class="small">支払い方法と金額を確認して「会計する」</div>',
+  checkoutLabel:'支払いへ進む'
+ },
+ smaregi:{
+  label:'スマレジ',
+  methods:['現金','クレジットカード','電子マネー','QRコード','商品券'],
+  qrNoSplit:false,
+  orderTitle:'販売業務',
+  paymentTitle:'会計',
+  nav:['販売業務','取置き','取引履歴'],
+  header:'<div class="smaregi-head"><strong>販売業務</strong><span class="small">商品を選択して販売</span></div>',
+  payHeader:'<div class="small">支払方法を選択して取引を確定</div>',
+  checkoutLabel:'会計へ'
+ },
+ square:{
+  label:'Square',
+  methods:['現金','カード','タッチ決済','QRコード'],
+  qrNoSplit:false,
+  orderTitle:'チェックアウト',
+  paymentTitle:'支払い',
+  nav:['商品','お気に入り','取引'],
+  header:'<div class="square-checkout">チェックアウト</div><div class="small">商品を追加して支払いへ</div>',
+  payHeader:'<div class="small">Square決済を想定したシンプルな支払い選択</div>',
+  checkoutLabel:'支払い'
+ }
+};
+function currentProfile(){return POS_PROFILES[state.posMode]||POS_PROFILES.air}
+function setPosMode(mode){
+ if(!POS_PROFILES[mode])return;
+ state.posMode=mode;document.body.dataset.pos=mode;
+ let p=currentProfile();
+ document.querySelectorAll('[data-pos]').forEach(b=>b.classList.toggle('active',b.dataset.pos===mode));
+ state.payMethod=p.methods[0];
+ let ob=document.querySelector('#posBannerOrder'),pb=document.querySelector('#posBannerPayment');
+ if(ob)ob.textContent=p.label+' モード';if(pb)pb.textContent=p.label+' モード';
+ let ot=document.querySelector('#orderTitle'),pt=document.querySelector('#paymentTitle'),tp=document.querySelector('#toPay');
+ if(ot)ot.textContent=p.orderTitle;if(pt)pt.textContent=p.paymentTitle;if(tp)tp.textContent=p.checkoutLabel;
+ let mh=document.querySelector('#modeSpecificHeader'),mn=document.querySelector('#modeNav'),ph=document.querySelector('#paymentModeHeader');
+ if(mh)mh.innerHTML=p.header||'';if(ph)ph.innerHTML=p.payHeader||'';
+ if(mn)mn.innerHTML=p.nav.map((n,i)=>`<button class="${i===0?'active':''}" data-mode-nav="${i}">${n}</button>`).join('');
+ let d=document.querySelector('#posModeDescription');
+ if(d)d.textContent=mode==='air'?'Airレジ：注文リスト/伝票情報/個別会計→支払いへ進む→会計する。':
+ mode==='smaregi'?'スマレジ：販売業務→会計→取引履歴を中心にした操作訓練。':
+ 'Square：チェックアウト→支払い→取引確認を中心にした高速決済訓練。';
+ renderPaymentMethodsOnly();updateSkills();
+ let ptt=document.querySelector('#posTrainingTitle');if(ptt)ptt.textContent=p.label+' 実務シナリオ';
+ if(document.querySelector('#posCaseList'))renderPosCaseList();
+ toast(p.label+'に切替')
+}
+function renderPaymentMethodsOnly(){
+ let el=document.querySelector('#payMethods');if(!el)return;
+ let p=currentProfile();
+ el.innerHTML=p.methods.map(m=>`<button class="paymethod ${m===state.payMethod?'active':''}" data-method="${m}">
+ <b>${m}</b><br><span class="small">${m==='現金'?'お預り金を入力':state.posMode==='square'?'決済を実行':state.posMode==='smaregi'?'支払方法を選択':'連携決済を模擬'}</span></button>`).join('')
+}
+function addSkill(p=1){state.posSkills[state.posMode]=Math.min(100,(state.posSkills[state.posMode]||0)+p);localStorage.setItem('posSkills',JSON.stringify(state.posSkills));updateSkills()}
+function updateSkills(){for(const [k,id] of [['air','Air'],['smaregi','Smaregi'],['square','Square']]){let v=state.posSkills[k]||0,t=document.querySelector('#skill'+id),b=document.querySelector('#skill'+id+'Bar');if(t)t.textContent=v;if(b)b.style.width=v+'%'}}
+
+const yen=n=>'¥'+Math.max(0,Math.round(n)).toLocaleString('ja-JP');
+const catalog=[
+ {id:1,c:'フード',n:'サンドイッチ',p:480,b:'490000000001'},{id:2,c:'フード',n:'カレー',p:780,b:'490000000002'},{id:3,c:'フード',n:'パスタ',p:920,b:'490000000003'},
+ {id:4,c:'フード',n:'サラダ',p:420,b:'490000000004'},{id:5,c:'ドリンク',n:'コーヒー',p:350,b:'490000000005'},{id:6,c:'ドリンク',n:'カフェラテ',p:450,b:'490000000006'},
+ {id:7,c:'ドリンク',n:'紅茶',p:380,b:'490000000007'},{id:8,c:'ドリンク',n:'オレンジジュース',p:400,b:'490000000008'},{id:9,c:'デザート',n:'チーズケーキ',p:520,b:'490000000009'},
+ {id:10,c:'デザート',n:'プリン',p:390,b:'490000000010'},{id:11,c:'デザート',n:'アイス',p:330,b:'490000000011'},{id:12,c:'物販',n:'コーヒー豆 200g',p:1350,b:'490000000012'}
+];
+const methods=['現金','クレジットカード','電子マネー','QR決済（Airペイ）','商品券'];
+let state={
+ cat:'フード', cart:[], ticketDiscount:{type:'none',value:0}, payMethod:'現金', input:'0', splits:[],
+ history:JSON.parse(localStorage.getItem('posHistory')||'[]'), actions:+localStorage.getItem('posActions')||0,
+ mistakes:+localStorage.getItem('posMistakes')||0, clears:+localStorage.getItem('posClears')||0,
+ training:false, missionIndex:0, targetDiscount:null, businessOpen:false, openingFloat:30000, cashAdjust:0, individualIds:[], individualMode:false, staffGame:null, timedMode:null, dining:'店内', bag:'なし', taxRate:10, changeSelection:0, receiptIssued:false, receiptReprinted:false, errorDrill:null, precheck:false, paycheck:false, carryMode:'指定', nextFloat:30000, realFlow:null, businessDayClosed:false, posMode:'air', posSkills:JSON.parse(localStorage.getItem('posSkills')||'{"air":0,"smaregi":0,"square":0}'), posTraining:null
+};
+const missions=[
+ {title:'現金・通常会計',text:'サンドイッチ1個とコーヒー1杯。1,000円を預かって会計してください。',
+  check:r=>r.items['サンドイッチ']==1&&r.items['コーヒー']==1&&r.total==830&&r.method.includes('現金')&&r.tender>=1000},
+ {title:'数量変更',text:'カフェラテを2杯、チーズケーキを1個。現金2,000円で会計してください。',
+  check:r=>r.items['カフェラテ']==2&&r.items['チーズケーキ']==1&&r.total==1420&&r.tender>=2000},
