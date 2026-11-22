@@ -1,5 +1,9 @@
 name: Time-to-Event CI
 
+concurrency:
+  group: time-to-event-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [master]
