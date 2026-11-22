@@ -54,3 +54,87 @@ jobs:
       - run: terraform fmt -check
       - run: terraform init -backend=false
       - run: terraform validate
+
+
+  docker-compose-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: time-to-event-analysis-platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose up -d --build
+
+      - name: Wait for API
+        run: |
+          set -euxo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+
+      - name: Smoke test auth and analysis
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import json, urllib.request
+
+          def post(path, payload, token=None):
+              data = json.dumps(payload).encode()
+              headers = {"Content-Type": "application/json"}
+              if token:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(
+                  "http://127.0.0.1:8000" + path,
+                  data=data,
+                  headers=headers,
+                  method="POST",
+              )
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.load(r)
+
+          token = post("/auth/register", {
+              "email": "smoke@example.com",
+              "password": "password123"
+          })["access_token"]
+
+          project = post("/projects", {
+              "name": "Smoke",
+              "domain": "server",
+              "config": {},
+              "data": []
+          }, token)
+
+          result = post("/api/analyze", {
+              "records": [
+                  {"time": 5, "event": 1, "group": "A"},
+                  {"time": 8, "event": 0, "group": "A"},
+                  {"time": 4, "event": 1, "group": "B"},
+                  {"time": 9, "event": 1, "group": "B"}
+              ],
+              "time_col": "time",
+              "event_col": "event",
+              "group_col": "group",
+              "covariates": [],
+              "seed": 12345
+          })
+
+          assert project["id"] > 0
+          assert result["n"] == 4
+          assert result["events"] == 3
+          print("Smoke test passed")
+          PY
+
+      - name: Show service status
+        if: always()
+        run: docker compose ps
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v
