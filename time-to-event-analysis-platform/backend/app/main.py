@@ -94,7 +94,7 @@ def run_job(job_id: int):
         job.status = "running"; job.started_at = datetime.utcnow(); db.commit()
         try:
             req = AnalysisRequest(**job.request_payload)
-            result = analyze(req).model_dump(mode="json")
+            result = analyze(req)
             job.result_payload = result
             job.status = "succeeded"
         except Exception as exc:
