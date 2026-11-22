@@ -5,3 +5,7 @@ output "api_url" {
 output "db_endpoint" {
   value = aws_db_instance.postgres.address
 }
+
+output "ecr_repository_url" {
+  value = aws_ecr_repository.backend.repository_url
+}
