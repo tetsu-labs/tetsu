@@ -1,0 +1,40 @@
+name: Unpack Time-to-Event v13
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/unpack-time-to-event-v13.yml"
+      - "time-to-event-analysis-platform/time_to_event_platform_v13_fullstack.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Unpack v13 source
+        run: |
+          set -euxo pipefail
+          cd time-to-event-analysis-platform
+          unzip -o time_to_event_platform_v13_fullstack.zip
+
+      - name: Commit expanded source
+        run: |
+          set -euxo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add time-to-event-analysis-platform
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Expand Time-to-Event Analysis Platform v13 source"
+          git push origin master
