@@ -1,0 +1,126 @@
+name: Deploy Time-to-Event to AWS
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/time-to-event-aws-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+  TF_DIR: time-to-event-analysis-platform/infra/terraform
+  APP_DIR: time-to-event-analysis-platform
+  TTE_DB_PASSWORD: ${{ secrets.TTE_DB_PASSWORD }}
+  TTE_JWT_SECRET: ${{ secrets.TTE_JWT_SECRET }}
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in AWS_ROLE_ARN TTE_DB_PASSWORD TTE_JWT_SECRET; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Required GitHub Actions secret $name is not configured."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: tte-github-actions
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Bootstrap remote Terraform state bucket
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          BUCKET="tte-tfstate-${ACCOUNT_ID}-${AWS_REGION}"
+          echo "TFSTATE_BUCKET=$BUCKET" >> "$GITHUB_ENV"
+
+          if ! aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+            aws s3api create-bucket               --bucket "$BUCKET"               --region "$AWS_REGION"               --create-bucket-configuration LocationConstraint="$AWS_REGION"
+          fi
+
+          aws s3api put-bucket-versioning             --bucket "$BUCKET"             --versioning-configuration Status=Enabled
+
+          aws s3api put-bucket-encryption             --bucket "$BUCKET"             --server-side-encryption-configuration             '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init             -backend-config="bucket=$TFSTATE_BUCKET"             -backend-config="key=time-to-event/terraform.tfstate"             -backend-config="region=$AWS_REGION"
+
+      - name: Create ECR repository first
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform apply -auto-approve             -target=aws_ecr_repository.backend             -var="db_password=$TTE_DB_PASSWORD"             -var="jwt_secret=$TTE_JWT_SECRET"             -var="backend_image=bootstrap"
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        shell: bash
+        run: |
+          set -euo pipefail
+          ECR_URL=$(terraform -chdir="$TF_DIR" output -raw ecr_repository_url)
+          IMAGE="$ECR_URL:$GITHUB_SHA"
+          docker build -t "$IMAGE" "$APP_DIR/backend"
+          docker push "$IMAGE"
+          echo "BACKEND_IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform plan             -out=tfplan             -var="db_password=$TTE_DB_PASSWORD"             -var="jwt_secret=$TTE_JWT_SECRET"             -var="backend_image=$BACKEND_IMAGE"
+
+      - name: Terraform apply
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Verify deployed API
+        shell: bash
+        run: |
+          set -euo pipefail
+          API_URL=$(terraform -chdir="$TF_DIR" output -raw api_url)
+          echo "API_URL=$API_URL" >> "$GITHUB_ENV"
+          for i in $(seq 1 60); do
+            if curl -fsS "$API_URL/health"; then
+              echo "AWS deployment health check passed"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::AWS API did not become healthy."
+          exit 1
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "## Time-to-Event AWS deployment"
+            echo ""
+            echo "- Region: $AWS_REGION"
+            echo "- API: $API_URL"
+            echo "- Image: $BACKEND_IMAGE"
+          } >> "$GITHUB_STEP_SUMMARY"
