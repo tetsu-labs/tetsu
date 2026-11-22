@@ -4,14 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import Base, engine, get_db, SessionLocal
+from app.db import get_db, SessionLocal
 from app.entities import User, Project, AnalysisJob
 from app.auth import hash_password, verify_password, create_access_token, current_user
 from app.schemas import RegisterRequest, LoginRequest, TokenResponse, ProjectCreate, ProjectUpdate
 from app.models import AnalysisRequest, AnalysisResponse
 from app.services.survival import analyze
 
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Time-to-Event Analysis Platform API", version="13.0.0")
 
