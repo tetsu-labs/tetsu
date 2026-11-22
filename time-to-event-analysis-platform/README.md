@@ -118,3 +118,57 @@ This project demonstrates more than CRUD. It covers:
 5. actual AWS deployment
 6. SQS or worker-based asynchronous analysis
 7. CloudWatch observability
+
+
+## Verified database migrations
+
+Alembic is now the schema migration mechanism. CI verifies the full round-trip:
+
+```text
+alembic upgrade head
+alembic downgrade base
+alembic upgrade head
+```
+
+Result: PASS.
+
+## Verified public-data analysis
+
+The platform is cross-checked against the public NCCTG advanced lung cancer dataset distributed with R `survival`.
+
+Verified values:
+
+- N: 228
+- Events: 165
+- Kaplan–Meier median: 310 days
+- Log-rank p-value (sex groups): 0.0013111645203554782
+- Cox age hazard ratio: 1.018896487608979
+
+The exact same rows are analyzed by R `survival` and the Python platform, and the CI asserts numerical agreement.
+
+Verified run:
+https://github.com/tetsu-labs/tetsu/actions/runs/45055788425
+
+## AWS deployment status
+
+The deployment workflow has been implemented for:
+
+```text
+GitHub OIDC
+  -> S3 remote Terraform state
+  -> ECR backend image
+  -> Terraform plan/apply
+  -> VPC / ALB / ECS Fargate / RDS PostgreSQL
+  -> /health verification
+```
+
+The first real deployment attempt stopped at credential preflight because these GitHub Actions secrets are not configured yet:
+
+- `AWS_ROLE_ARN`
+- `TTE_DB_PASSWORD`
+- `TTE_JWT_SECRET`
+
+No AWS resources were created and no AWS charges were incurred by that failed attempt.
+
+Deployment attempt:
+https://github.com/tetsu-labs/tetsu/actions/runs/45055876239
