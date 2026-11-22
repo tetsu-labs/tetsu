@@ -1,0 +1,56 @@
+name: Time-to-Event CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "time-to-event-analysis-platform/**"
+      - ".github/workflows/time-to-event-ci.yml"
+  pull_request:
+    paths:
+      - "time-to-event-analysis-platform/**"
+      - ".github/workflows/time-to-event-ci.yml"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: time-to-event-analysis-platform/backend
+    env:
+      DATABASE_URL: sqlite:///./ci_app.db
+      JWT_SECRET: ci-test-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: time-to-event-analysis-platform/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run build
+
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: time-to-event-analysis-platform/infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - run: terraform fmt -check
+      - run: terraform init -backend=false
+      - run: terraform validate
