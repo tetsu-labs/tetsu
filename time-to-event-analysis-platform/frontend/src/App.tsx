@@ -32,7 +32,7 @@ export function App(){
   const [selectedProject,setSelectedProject]=useState<number|null>(null);
   const [jobs,setJobs]=useState<any[]>([]);
 
-  const authHeaders = token ? {Authorization:`Bearer ${token}`} : {};
+  const authHeaders: Record<string,string> = token ? {Authorization:`Bearer ${token}`} : {};
 
   async function auth(mode:"register"|"login"){
     setError("");
