@@ -4,32 +4,39 @@
 
 > 非公式の二次創作。原作権利者とは無関係です。商用利用を想定していません。
 
-## 目次
-- [第1章 アリアハンの狙撃手](chapters/01-ariahan.md)
-- [第2章 魔法使いの狙撃術](chapters/02-magic-sniper-summary.md)
-- [第3章 勇者と暗殺者](chapters/03-hero-assassin-summary.md)
-- [第4章 勇者暗殺依頼](chapters/04-assassination-contract-summary.md)
+## 原文アーカイブ（省略なしの分割登録）
 
-## 収録状況
+| 章 | 原文 | 節数 |
+| --- | --- | ---: |
+| 第1章 アリアハンの狙撃手 | [本文](chapters/01-ariahan.md) | 7 |
+| 第2章 魔法使いの狙撃術 | [原文](original/02/) | 11 |
+| 第3章 勇者と暗殺者 | [原文](original/03/) | 15 |
+| 第4章 勇者暗殺依頼 | [原文](original/04/) | 20 |
 
-各章とも物語形式の文章で登録しています。ただし第2〜4章は会話中の長編原文を一字一句転記したものではなく、全節の展開を含む**短縮・再構成版**です。原文と一致する完全版としては扱わないでください。
+### 第2章
+- [第1〜3節](original/02/sections-01-03.md)
+- [第4〜6節](original/02/sections-04-06.md)
+- [第7〜11節](original/02/sections-07-11.md)
 
-| 章 | 節数 | 状態 |
-| --- | ---: | --- |
-| 1 | 7 | 本文（会話に沿った転記） |
-| 2 | 11 | 物語形式の短縮・再構成版 |
-| 3 | 15 | 物語形式の短縮・再構成版 |
-| 4 | 20 | 物語形式の短縮・再構成版 |
+### 第3章
+- [第1〜3節](original/03/sections-01-03.md)
+- [第4〜6節](original/03/sections-04-06.md)
+- [第7〜9節](original/03/sections-07-09.md)
+- [第10〜12節](original/03/sections-10-12.md)
+- [第13〜15節](original/03/sections-13-15.md)
 
-## 第5章予告
+### 第4章
+- [第1〜3節](original/04/sections-01-03.md)
+- [第4〜6節](original/04/sections-04-06.md)
+- [第7〜10節](original/04/sections-07-10.md)
+- [第11〜14節](original/04/sections-11-14.md)
+- [第15〜17節](original/04/sections-15-17.md)
+- [第18〜20節](original/04/sections-18-20.md)
 
-**「魔王バラモス暗殺計画」** — 魔王の城へ入るのではなく、魔王を城から誘い出す。かつて対決したカンダタと再接触する。
+## 従来の短縮版
 
-## 原文アーカイブ（省略せず分割登録）
+以前の短縮・再構成版は `chapters/02-magic-sniper-summary.md` 、`chapters/03-hero-assassin-summary.md` 、`chapters/04-assassination-contract-summary.md` に残しています。**小説本文は上記の原文アーカイブを参照してください。**
 
-- **第2章：全11節を登録済み**
-  - [第1〜3節](original/02/sections-01-03.md)
-  - [第4〜6節](original/02/sections-04-06.md)
-  - [第7〜11節](original/02/sections-07-11.md)
+## 続き
 
-従来の `chapters/` 以下の第2〜4章は短縮・再構成版として保持しています。第2章については `original/02/` 以下が原文アーカイブです。第3〜4章の原文は未登録です。
+第五章「魔王バラモス暗殺計画」：魔王の城に入るのではなく、魔王を城から誘い出す。かつて対決したカンダタに再接触する。
