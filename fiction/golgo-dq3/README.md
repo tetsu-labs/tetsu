@@ -12,6 +12,7 @@
 | 第2章 魔法使いの狙撃術 | [原文](original/02/) | 11 |
 | 第3章 勇者と暗殺者 | [原文](original/03/) | 15 |
 | 第4章 勇者暗殺依頼 | [原文](original/04/) | 20 |
+| 第5章 魔王バラモス暗殺計画（前編） | [原文](original/05/) | 12 |
 
 ### 第2章
 - [第1〜3節](original/02/sections-01-03.md)
@@ -37,6 +38,11 @@
 
 以前の短縮・再構成版は `chapters/02-magic-sniper-summary.md` 、`chapters/03-hero-assassin-summary.md` 、`chapters/04-assassination-contract-summary.md` に残しています。**小説本文は上記の原文アーカイブを参照してください。**
 
+### 第5章（前編）
+- [第1〜4節](original/05/sections-01-04.md)
+- [第5〜8節](original/05/sections-05-08.md)
+- [第9〜12節](original/05/sections-09-12.md)
+
 ## 続き
 
-第五章「魔王バラモス暗殺計画」：魔王の城に入るのではなく、魔王を城から誘い出す。かつて対決したカンダタに再接触する。
+第五章後編：転移門の魔力供給装置に仕掛けた異常が作動し、バラモス城が揺れ始めたところから。
